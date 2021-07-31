@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using TitleFetcherAPI.Master.Services;
+using TitleFetcherAPI.Master.Services.Abstractions;
 
 namespace TitleFetcherAPI.Master
 {
@@ -27,6 +28,7 @@ namespace TitleFetcherAPI.Master
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddSingleton<IQueueManagerService, QueueManagerService>();
+            services.AddSingleton<ITitleStorageService, TitleStorageService>();
             services.AddControllers();
 
             services.AddSwaggerGen();

@@ -1,12 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
-using TitleFetcherAPI.Master.BL;
 using TitleFetcherAPI.Master.Models.RequestModels;
 using TitleFetcherAPI.Master.Services;
+using TitleFetcherAPI.Master.Services.Abstractions;
 
 namespace TitleFetcherAPI.Master.Controllers
 {
@@ -15,12 +12,14 @@ namespace TitleFetcherAPI.Master.Controllers
     public class TitleController : ControllerBase
     {
         private readonly IConfiguration _config;
-        private static IQueueManagerService _queueManager;      
-        
-        public TitleController(IConfiguration config, IQueueManagerService queueManager)
+        private readonly IQueueManagerService _queueManager;
+        private readonly ITitleStorageService _storage;
+
+        public TitleController(IConfiguration config, IQueueManagerService queueManager, ITitleStorageService storage)
         {
             _config = config;
             _queueManager = queueManager;
+            _storage = storage;
         }
 
         [HttpPost]
@@ -39,13 +38,10 @@ namespace TitleFetcherAPI.Master.Controllers
         }
 
         [HttpGet]
-        [Route("get-recent-titles/{minutes}")]
-        public IActionResult GetRecentTitles(string minutes)
+        [Route("get-recent-titles/{timeframe}")]
+        public IActionResult GetRecentTitles(string timeframe)
         {
-            bool isNumeric = int.TryParse(minutes, out int minutesNum) && !minutes.Equals("-1");
-            var defaultMins = _config.GetSection("Titles").GetValue<int>("DefaultTimeFrame");
-
-            return Ok(UrlTitleStorage.GetUrlTitlesForLastTimeFrame(isNumeric ? minutesNum : defaultMins));
+            return Ok(_storage.GetUrlTitlesForLastTimeFrame(timeframe));
         }
     }
 }

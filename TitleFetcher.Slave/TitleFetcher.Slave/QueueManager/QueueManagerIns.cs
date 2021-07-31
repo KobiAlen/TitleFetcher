@@ -29,7 +29,7 @@ namespace TitleFetcher.Slave.QueueManager
             };
             Conn = factory.CreateConnection();
             var channel = Conn.CreateModel();
-            channel.QueueDeclare(requestQueue, true, false, false, null);
+            channel.QueueDeclare(requestQueue, durable: true, exclusive: false, autoDelete: false, null);
             var consumer = new EventingBasicConsumer(channel);
             consumer.Received += (sender, e) =>
             {

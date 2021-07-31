@@ -26,10 +26,10 @@ namespace TitleFetcher.Slave.TitleFetcher.Abstraction
                 if (m.Success)
                     return m.Groups[1].Value;
                 else
-                    return "";
+                    return "Could not find a title for this url";
             } catch (Exception ex)
             {
-                return "";
+                return "Error getting the title for this url";
             }            
         }
     }

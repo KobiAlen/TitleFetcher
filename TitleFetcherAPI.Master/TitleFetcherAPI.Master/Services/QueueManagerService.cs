@@ -1,16 +1,13 @@
-﻿using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-using TitleFetcherAPI.Master.BL;
 using TitleFetcherAPI.Master.Models;
 using TitleFetcherAPI.Master.Models.ResponseModels;
+using TitleFetcherAPI.Master.Services.Abstractions;
 
 namespace TitleFetcherAPI.Master.Services
 {
@@ -20,15 +17,18 @@ namespace TitleFetcherAPI.Master.Services
         private const string responseQueue = "title-response-queue";
 
         private readonly IConfiguration _config;
+        private readonly ITitleStorageService _storage;
+
         private readonly IConnection Conn;
 
         /// <summary>
         /// Initialize the service, while subscribing to the response-queue
         /// </summary>
         /// <param name="config"></param>
-        public QueueManagerService(IConfiguration config)
+        public QueueManagerService(IConfiguration config, ITitleStorageService storage)
         {
             _config = config;
+            _storage = storage;
 
             var connectionEndpoint = _config.GetSection("Queue").GetValue<string>("ConnectionFactoryEndpoint");
             var factory = new ConnectionFactory
@@ -37,7 +37,7 @@ namespace TitleFetcherAPI.Master.Services
             };
             Conn = factory.CreateConnection();
             var channel = Conn.CreateModel();
-            channel.QueueDeclare(responseQueue, true, false, false, null);
+            channel.QueueDeclare(responseQueue, durable:true, exclusive:false, autoDelete:false, null);
             var consumer = new EventingBasicConsumer(channel);
             consumer.Received += (sender, e) =>
             {
@@ -70,7 +70,7 @@ namespace TitleFetcherAPI.Master.Services
         {
             var message = JsonConvert.DeserializeObject<TitleResponse>(Encoding.UTF8.GetString(body));
 
-            UrlTitleStorage.AddUrlTitle(new UrlTitle { DateAdded = DateTime.Now, Title = message.Title, Url = message.Url });
+            _storage.AddUrlTitle(new UrlTitle { DateAdded = DateTime.Now, Title = message.Title, Url = message.Url });
         }
     }
 }
